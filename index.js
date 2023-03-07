@@ -9,7 +9,11 @@ const cors = require("cors");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
+const postRouter = require("./routes/posts")
+const commentRouter = require("./routes/comments")
 require("dotenv").config();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -32,7 +36,27 @@ mongoose
   .then(() => console.log("MongoDB povezan..."))
   .catch((err) => console.log(err));
 
+  const verifyToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+  
+    if (!token) {
+      return res.status(401).send('Access denied.');
+    }
+  
+    try {
+      const verified = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = verified;
+      next();
+    } catch (error) {
+      res.status(400).send('Invalid token.');
+    }
+  };
+
+app.use("/api/comments", verifyToken, commentRouter);
+app.use("/api/users", verifyToken, usersRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/posts", verifyToken, postRouter )
 
 app.get("/getComments", (req, res) => {
   Comment.find({}, (err, result) => {
@@ -50,18 +74,7 @@ app.post("/createComment", async (req, res) => {
   res.json(comment);
 });
 
-app.get("/getPosts", async (req, res) => {
-  const posts = await Post.find({});
-  res.json(posts);
-});
 
-app.post("/createPost", async (req, res) => {
-  const post = req.body;
-  const newPost = new Post(post);
-  await newPost.save();
-  console.log("New post created:", newPost);
-  res.json(newPost);
-});
 
 app.listen(process.env.PORT, () => {
   console.log("Server running on port 3001");
