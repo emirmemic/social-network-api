@@ -28,7 +28,11 @@ const userSchema = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: Date.now
-  }
+  },
+  avatar: {
+    type: String, 
+    default: "",
+  },
 });
 userSchema.pre('save', function(next) {
   const user = this;

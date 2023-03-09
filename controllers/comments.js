@@ -9,6 +9,7 @@ const getAllComments = async (req, res) => {
       model: "users",
       select: "username email -_id",
     });
+    comments.reverse();
     res.json(comments);
   } catch (error) {
     console.error(error);

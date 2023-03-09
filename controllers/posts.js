@@ -8,7 +8,19 @@ const getAllPosts = async (req, res) => {
     model: "users",
     select: "username email -_id"
   });
+  posts.reverse()
   res.json(posts);
+};
+
+const getPost = async (req, res) => {
+  console.log("getting post")
+  const post = await Post.findById(req.params.id).populate({
+    path: "author",
+    model: "users",
+    select: "username email -_id"
+  });
+  console.log(post)
+  res.json(post);
 };
 
 const createPost = async (req, res) => {
@@ -24,4 +36,4 @@ const createPost = async (req, res) => {
   res.json(newPost);
 };
 
-module.exports = { getAllPosts, createPost };
+module.exports = { getAllPosts, createPost, getPost };

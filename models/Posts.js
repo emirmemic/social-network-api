@@ -8,15 +8,14 @@ const postSchema = new mongoose.Schema({
   },
   title: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
-    minlength: 5,
   },
   content: {
     type: String,
     required: true,
     trim: true,
-    minlength: 10,
+    minlength: 1,
   },
   comments: [
     {
