@@ -36,4 +36,31 @@ const createPost = async (req, res) => {
   res.json(newPost);
 };
 
-module.exports = { getAllPosts, createPost, getPost };
+const likePost = async (req, res) => {
+  try {
+    // Pronaći post
+    const post = await Post.findById(req.params.id);
+
+    // Provjeriti da li post postoji
+    if (!post) {
+      return res.status(404).send({ error: "Post not found" });
+    }
+
+    // Provjeriti da li je korisnik već lajkovao post
+    if (post.likes.includes(req.user._id)) {
+      return res.status(400).send({ error: "Post already liked" });
+    }
+
+    // Dodati korisnikov id u niz lajkova i sačuvati post
+    post.likes.push(req.user._id);
+    await post.save();
+
+    res.send(post);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Server error" });
+  }
+};
+
+
+module.exports = { getAllPosts, createPost, getPost, likePost };

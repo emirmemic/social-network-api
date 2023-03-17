@@ -14,6 +14,7 @@ const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
 const postRouter = require("./routes/posts")
 const commentRouter = require("./routes/comments")
+const likeRouter = require("./routes/likes")
 require("dotenv").config();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -53,6 +54,7 @@ mongoose
     }
   };
 
+app.use("/api/likes", verifyToken, likeRouter);  
 app.use("/api/comments", verifyToken, commentRouter);
 app.use("/api/users", verifyToken, usersRouter);
 app.use("/api/auth", authRouter);
