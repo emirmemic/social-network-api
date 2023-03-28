@@ -25,24 +25,19 @@ const Login = async (req, res) => {
 const Register = async (req, res) => {
   const userData = req.body;
 
-  // Validacija podataka koji su poslani u zahtjevu
   if (!userData.username || !userData.password || !userData.email) {
     res.status(400).send("Nedostaju obavezna polja za registraciju.");
     return;
   }
 
-  // Kreiranje novog korisnika
   const newUser = new User(userData);
 
-  // Čuvanje korisnika u bazi podataka
   newUser.save((err) => {
     if (err) {
       console.log(err);
       res.status(500).send("Greška prilikom čuvanja korisnika.");
       return;
     }
-
-    // Uspješna registracija
   });
   const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
     expiresIn: "24h",

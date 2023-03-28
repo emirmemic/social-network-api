@@ -1,26 +1,30 @@
 const { Post } = require("../models/Posts");
-const { User }  = require("../models/Users");
 const jwt = require("jsonwebtoken");
 
 const getAllPosts = async (req, res) => {
   const posts = await Post.find({}).populate({
     path: "author",
     model: "users",
-    select: "username email -_id"
+    select: "username email _id",
   });
-  posts.reverse()
+  posts.reverse();
   res.json(posts);
 };
 
 const getPost = async (req, res) => {
-  console.log("getting post")
-  const post = await Post.findById(req.params.id).populate({
-    path: "author",
-    model: "users",
-    select: "username email -_id"
-  });
-  console.log(post)
-  res.json(post);
+  console.log("getting post");
+  try {
+    const post = await Post.findById(req.params.id).populate({
+      path: "author",
+      model: "users",
+      select: "username email _id",
+    });
+    console.log(post);
+    res.json(post);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Server error" });
+  }
 };
 
 const createPost = async (req, res) => {
@@ -36,22 +40,68 @@ const createPost = async (req, res) => {
   res.json(newPost);
 };
 
-const likePost = async (req, res) => {
+const updatePost = async (req, res) => {
+  const id = req.params.id;
+  const token = req.header("Authorization").replace("Bearer ", "");
+  const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+  const userId = decodedToken.id;
+  let post = await Post.findById(req.params.id);
+  if (!post) {
+    return res.status(404).send({ error: "Post not found" });
+  }
+  if (post.author._id.toString() !== userId) {
+    return res.status(401).send({ error: "Not your post" });
+  }
+  console.log("updating post");
   try {
-    // Pronaći post
-    const post = await Post.findById(req.params.id);
+    post = await Post.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      { ...req.body },
+      { new: true }
+    ).populate({
+      path: "author",
+      model: "users",
+      select: "username email _id",
+    });
 
-    // Provjeriti da li post postoji
+    res.send(post);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Server error" });
+  }
+};
+
+const deletePost = async (req, res) => {
+  console.log("deleting post");
+
+  try {
+    const post = await Post.findByIdAndDelete(req.params.id);
+
     if (!post) {
       return res.status(404).send({ error: "Post not found" });
     }
 
-    // Provjeriti da li je korisnik već lajkovao post
+    res.send({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Server error" });
+  }
+};
+
+const likePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).send({ error: "Post not found" });
+    }
+
     if (post.likes.includes(req.user._id)) {
       return res.status(400).send({ error: "Post already liked" });
     }
 
-    // Dodati korisnikov id u niz lajkova i sačuvati post
     post.likes.push(req.user._id);
     await post.save();
 
@@ -62,5 +112,11 @@ const likePost = async (req, res) => {
   }
 };
 
-
-module.exports = { getAllPosts, createPost, getPost, likePost };
+module.exports = {
+  getAllPosts,
+  createPost,
+  getPost,
+  likePost,
+  updatePost,
+  deletePost,
+};

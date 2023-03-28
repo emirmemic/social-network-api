@@ -1,5 +1,4 @@
 const { Like } = require("../models/Likes");
-const { Post } = require("../models/Posts");
 const jwt = require("jsonwebtoken");
 
 const createLike = async (req, res) => {
